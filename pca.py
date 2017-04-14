@@ -1,4 +1,7 @@
+import numpy as np
+
 COMPLETENESS = 0.75
+VARIANCE_THRESHOLD = 0.95
 
 def create_map(filename):
     file_to_read = open(filename, 'r')
@@ -45,10 +48,28 @@ def generate_data_matrix(map_of_maps):
             info_matrix.append(row)
     return info_matrix
 
+def find_k(s, threshold):
+    #min k st. retained var > threshold
+    tot = np.sum(s)
+    for i in range(1, s.size):
+        curr = np.sum(s[:i])
+        if curr / tot > threshold:
+            return i
+    return s.size - 1
+
+def pca(u, s, threshold):
+    k = find_k(s, threshold)
+    return u[:, :k]
+
 data = create_map("recent_compact_2013.csv")
 icpc = indicator_count_per_country(data)
 icpi = indicator_count_per_indicator(data)
 imap = create_indicator_mapping(icpi)
 mat = generate_data_matrix(data)
-print(mat)
+m = len(mat)
+np_mat = np.matrix(mat)
+sigma = np_mat.T * np_mat / m
+u, s, v = np.linalg.svd(sigma)
+u_reduce = pca(u, s, VARIANCE_THRESHOLD)
+print(u_reduce.shape)
 
