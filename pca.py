@@ -83,14 +83,16 @@ def generate_data_matrix(map_of_maps):
     imap = create_indicator_mapping(icpi)
     num_indicators = len(imap.keys())
     info_matrix = []
+    keys_used = []
     for key in map_of_maps:
         if icpc[key] > COMPLETENESS * num_indicators:
+            keys_used.append(key)
             curr_map = map_of_maps[key]
             row = [0 for i in range(num_indicators)]
             for indicator in curr_map:
                 row[imap[indicator]] = curr_map.get(indicator, 0)
             info_matrix.append(row)
-    return info_matrix
+    return info_matrix, keys_used
 
 def find_k(s, threshold):
     #min k st. retained var > threshold
@@ -112,7 +114,7 @@ def reduce_from_csv(filename):
     data_standard = standardize_mapping(data)
 
     imap = create_indicator_mapping(icpi)
-    mat = generate_data_matrix(data_standard)
+    mat, keys_used = generate_data_matrix(data_standard)
     m = len(mat)
     np_mat = np.matrix(mat)
 
@@ -120,23 +122,22 @@ def reduce_from_csv(filename):
     u, s, v = np.linalg.svd(sigma)
     u_reduce = pca(u, s, VARIANCE_THRESHOLD)
     reduced_mat = np_mat * u_reduce
-    return reduced_mat, data_standard
+    return reduced_mat, keys_used
 
-def write_csv_from_mat(np_mat, map_of_maps, filename):
+def write_csv_from_mat(np_mat, keys_used, filename):
     f = open(filename, 'w')
-    keys = list(map_of_maps.keys())
     num_cols = np_mat.shape[1]
     f.write("Country")
     for i in range(num_cols):
         f.write(",x"+str(i+1))
     f.write("\n")
     for p, row in enumerate(np_mat):
-        f.write(keys[p])
+        f.write(keys_used[p])
         for ele in np.nditer(row):
             f.write(","+str(ele))
         f.write("\n")
     f.close()    
 
-np_mat, map_of_maps = reduce_from_csv("recent_compact_2013.csv")
-write_csv_from_mat(np_mat, map_of_maps, "pca_2013.csv")
+np_mat, keys_used = reduce_from_csv("recent_compact_2013.csv")
+write_csv_from_mat(np_mat, keys_used, "pca_2013.csv")
 
