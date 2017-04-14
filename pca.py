@@ -1,7 +1,9 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import math
 
-COMPLETENESS = 0.75
-VARIANCE_THRESHOLD = 0.95
+COMPLETENESS = 0.50
+VARIANCE_THRESHOLD = 0.99
 
 def create_map(filename):
     file_to_read = open(filename, 'r')
@@ -15,17 +17,59 @@ def create_map(filename):
 
 def indicator_count_per_country(map_of_maps):
     metadata = {}
-    for key in data:
-        metadata[key] = len(data[key].items())
+    for key in map_of_maps:
+        metadata[key] = len(map_of_maps[key].items())
     return metadata
 
 def indicator_count_per_indicator(map_of_maps):
     metadata = {}
-    for key in data:
-        curr_map = data[key]
+    for key in map_of_maps:
+        curr_map = map_of_maps[key]
         for key in curr_map:
             metadata[key] = metadata.get(key, 0) + 1
     return metadata
+
+def indicator_sum_per_indicator(map_of_maps):
+    metadata = {}
+    for key in map_of_maps:
+        curr_map = map_of_maps[key]
+        for key in curr_map:
+            metadata[key] = metadata.get(key, 0) + curr_map[key]
+    return metadata
+
+def indicator_sum_squared_per_indicator(map_of_maps):
+    metadata = {}
+    for key in map_of_maps:
+        curr_map = map_of_maps[key]
+        for key in curr_map:
+            metadata[key] = metadata.get(key, 0) + curr_map[key] ** 2
+    return metadata
+
+def indicator_mean_per_indicator(map_of_maps):
+    metadata = {}
+    icpi, ispi = indicator_count_per_indicator(map_of_maps), indicator_sum_per_indicator(map_of_maps)
+    for key in icpi:
+        metadata[key] = ispi[key] / float(icpi[key])
+    return metadata
+
+def indicator_stdev_per_indicator(map_of_maps):
+    metadata = {}
+    icpi, ispi, isspi = indicator_count_per_indicator(map_of_maps), indicator_sum_per_indicator(map_of_maps), indicator_sum_squared_per_indicator(map_of_maps)
+    for key in icpi:
+        metadata[key] = math.sqrt(isspi[key] / float(icpi[key]) - (ispi[key] / float(icpi[key])) ** 2)
+    return metadata
+
+def standardize_mapping(map_of_maps):
+    map_of_maps_standard = {}
+    impi, istdevpi = indicator_mean_per_indicator(map_of_maps), indicator_stdev_per_indicator(map_of_maps)
+    for key in map_of_maps:
+        curr_map = map_of_maps[key]
+        curr_map_standard = {}
+        for attribute in curr_map:
+            if istdevpi[attribute] != 0:
+                curr_map_standard[attribute] = (curr_map[attribute] - impi[attribute]) / istdevpi[attribute]
+        map_of_maps_standard[key] = curr_map_standard
+    return map_of_maps_standard
 
 def create_indicator_mapping(icpi):
     imap = {}
@@ -41,6 +85,7 @@ def generate_data_matrix(map_of_maps):
     info_matrix = []
     for key in map_of_maps:
         if icpc[key] > COMPLETENESS * num_indicators:
+            print(key)
             curr_map = map_of_maps[key]
             row = [0 for i in range(num_indicators)]
             for indicator in curr_map:
@@ -64,12 +109,15 @@ def pca(u, s, threshold):
 data = create_map("recent_compact_2013.csv")
 icpc = indicator_count_per_country(data)
 icpi = indicator_count_per_indicator(data)
+data_standard = standardize_mapping(data)
+
 imap = create_indicator_mapping(icpi)
-mat = generate_data_matrix(data)
+mat = generate_data_matrix(data_standard)
 m = len(mat)
 np_mat = np.matrix(mat)
+
+print(np_mat.shape)
 sigma = np_mat.T * np_mat / m
 u, s, v = np.linalg.svd(sigma)
 u_reduce = pca(u, s, VARIANCE_THRESHOLD)
-print(u_reduce.shape)
 
