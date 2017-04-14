@@ -2,8 +2,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 
+#parameters to tune
 COMPLETENESS = 0.50
 VARIANCE_THRESHOLD = 0.95
+
+#functions to use: 
+#reduce_from_csv(filename) will take in a csv and create a PCA reduced one. 
+#it returns the reduced matrix and the keys used (i.e. which countries weren't thrown out).
+#write_csv_from_mat(np_mat, keys_used, filename) takes in the output of reduce_from_csv as
+#the first two args, and whatever you want to call the file as the third arg and writes
+#the reduced data to that file
 
 def create_map(filename):
     file_to_read = open(filename, 'r')
