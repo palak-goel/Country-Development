@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import math
 
 COMPLETENESS = 0.50
-VARIANCE_THRESHOLD = 0.99
+VARIANCE_THRESHOLD = 0.95
 
 def create_map(filename):
     file_to_read = open(filename, 'r')
@@ -85,7 +85,6 @@ def generate_data_matrix(map_of_maps):
     info_matrix = []
     for key in map_of_maps:
         if icpc[key] > COMPLETENESS * num_indicators:
-            print(key)
             curr_map = map_of_maps[key]
             row = [0 for i in range(num_indicators)]
             for indicator in curr_map:
@@ -106,18 +105,38 @@ def pca(u, s, threshold):
     k = find_k(s, threshold)
     return u[:, :k]
 
-data = create_map("recent_compact_2013.csv")
-icpc = indicator_count_per_country(data)
-icpi = indicator_count_per_indicator(data)
-data_standard = standardize_mapping(data)
+def reduce_from_csv(filename):
+    data = create_map(filename)
+    icpc = indicator_count_per_country(data)
+    icpi = indicator_count_per_indicator(data)
+    data_standard = standardize_mapping(data)
 
-imap = create_indicator_mapping(icpi)
-mat = generate_data_matrix(data_standard)
-m = len(mat)
-np_mat = np.matrix(mat)
+    imap = create_indicator_mapping(icpi)
+    mat = generate_data_matrix(data_standard)
+    m = len(mat)
+    np_mat = np.matrix(mat)
 
-print(np_mat.shape)
-sigma = np_mat.T * np_mat / m
-u, s, v = np.linalg.svd(sigma)
-u_reduce = pca(u, s, VARIANCE_THRESHOLD)
+    sigma = np_mat.T * np_mat / m
+    u, s, v = np.linalg.svd(sigma)
+    u_reduce = pca(u, s, VARIANCE_THRESHOLD)
+    reduced_mat = np_mat * u_reduce
+    return reduced_mat, data_standard
+
+def write_csv_from_mat(np_mat, map_of_maps, filename):
+    f = open(filename, 'w')
+    keys = list(map_of_maps.keys())
+    num_cols = np_mat.shape[1]
+    f.write("Country")
+    for i in range(num_cols):
+        f.write(",x"+str(i+1))
+    f.write("\n")
+    for p, row in enumerate(np_mat):
+        f.write(keys[p])
+        for ele in np.nditer(row):
+            f.write(","+str(ele))
+        f.write("\n")
+    f.close()    
+
+np_mat, map_of_maps = reduce_from_csv("recent_compact_2013.csv")
+write_csv_from_mat(np_mat, map_of_maps, "pca_2013.csv")
 
