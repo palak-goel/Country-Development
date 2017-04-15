@@ -4,6 +4,7 @@ import csv
 import matplotlib.pyplot as plt
 from plotly.offline import plot 
 import pandas as pd
+import random
 
 #distance between two points
 def distance(A, B):
@@ -65,14 +66,25 @@ def compute_cluster(clusters):
 	X = np.array(X)
 	N = len(X)
 
+
 	#At this point data is loaded.
 	K = clusters
 
-	# set initial clusters (THIS IS WRONG!!!!!), first commented line is Dan's stencil code
-	#aXmeans_byCluster = np.random.rand( K, X.shape[1]) * (np.max(X, axis=0) - np.min(X, axis=0)) + np.min(X, axis=0)
-	aXmeans_byCluster = np.random.rand( K, X.shape[1])
-	###################
+	# set initial clusters 
+
+	df = pd.read_csv('pca_2013.csv')
+	aXmeans_byCluster = []
+	for i in range(K):
+		cluster = []
+		for j in range(1,87):
+			maximum = max(df['x'+str(j)])
+			minimum = min(df['x'+str(j)])
+			r = random.uniform(minimum, maximum)
+			cluster.append(r)
+		aXmeans_byCluster.append(cluster)
 	
+	###################
+
 	converged = False
 	#iterate until converged
 	while not converged:
