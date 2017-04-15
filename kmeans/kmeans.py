@@ -41,38 +41,17 @@ def equals(A, B):
 	return True
 
 # K MEANS CLUSTERING
-def compute_cluster(clusters):
-	# READ IN DATA
-	f = open("pca_2013.csv", "rt", encoding="utf8")
-	csvReader  = csv.DictReader(f)
-	acCountries = []
-	X = []
-
-	#acCountries contains all of the countries
-	#X contains all of the attributes
-	row = 0
-	for cLine in csvReader:
-		acCountries.append(cLine["Country"])
-		attributes = []
-		for attr in cLine:
-			try: 
-				attributes.append(float(cLine[attr]))
-			except ValueError:
-				continue
-				
-		X.append(attributes)
-
+def compute_cluster(clusters, df):
+	acCountries = df['Country']
 	acCountries = np.array(acCountries)
+	X = df.ix[:, df.columns != 'Country']
 	X = np.array(X)
 	N = len(X)
-
 
 	#At this point data is loaded.
 	K = clusters
 
 	# set initial clusters 
-
-	df = pd.read_csv('pca_2013.csv')
 	aXmeans_byCluster = []
 	for i in range(K):
 		cluster = []
@@ -129,10 +108,12 @@ def compute_cluster(clusters):
 #runs compute cluster 100,000 times and returns the cluster with minimum error
 #K = the number of clusters
 def minimize(K):
+	df = pd.read_csv('pca_2013.csv')
 	ans = {}
 	prevMin = 10000000
-	for i in range(100000): #    <----  MODIFY THIS NUMBER 
-		array = compute_cluster(K)
+	for i in range(1000): #    <----  MODIFY THIS NUMBER 
+		array = compute_cluster(K, df)
+		print(i)
 		if (array[1] < prevMin):
 			prevMin = array[1]
 			ans = array[0]
@@ -185,5 +166,7 @@ def country_graph(clusters):
 	
 
 print(minimize(6))
+#df = pd.read_csv('pca_2013.csv')
+#compute_cluster(6, df)
 #graph()
 
