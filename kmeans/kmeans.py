@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 from plotly.offline import plot 
 import pandas as pd
 import random
+import threading 
+from multiprocessing import Process
+from multiprocessing import Manager
 
 #distance between two points
 def distance(A, B):
@@ -107,19 +110,18 @@ def compute_cluster(clusters, df):
 
 #runs compute cluster 100,000 times and returns the cluster with minimum error
 #K = the number of clusters
-def minimize(K):
+# tLock = threading.Lock()
+def minimize(K, iterations, ans):
+	prevMin = 10000000000
 	df = pd.read_csv('pca_2013.csv')
-	ans = {}
-	prevMin = 10000000
-	for i in range(1000): #    <----  MODIFY THIS NUMBER 
+	for i in range(iterations): 
 		array = compute_cluster(K, df)
 		print(i)
 		if (array[1] < prevMin):
+			ans[0] = array[0]
+			ans[1] = array[1]
 			prevMin = array[1]
-			ans = array[0]
-	print(ans)
-	country_graph(ans)
-	return prevMin
+	#country_graph(ans)
 
 #This will create the graph we use to determine the number of clusters using elbow
 def graph():
@@ -163,10 +165,46 @@ def country_graph(clusters):
 
 	fig = dict(data=data, layout=layout)
 	plot(fig, validate=True, filename='count-cluster')
-	
 
-print(minimize(6))
-#df = pd.read_csv('pca_2013.csv')
-#compute_cluster(6, df)
-#graph()
+#does threading, returns cluster dictionary	
+def threading():
+	manager = Manager()
+
+	ans1 = manager.list(range(2))
+	ans2 = manager.list(range(2))
+	# ans3 = manager.list(range(2))
+	# ans4 = manager.list(range(2))
+
+	p1 = Process(target = minimize, args = (6,250, ans1))
+	p2 = Process(target = minimize, args = (6,250, ans2))
+	# p3 = Process(target = minimize, args = (6,250, ans3))
+	# p4 = Process(target = minimize, args = (6,250, ans4))
+
+	p1.start()
+	p2.start()
+	# p3.start()
+	# p4.start()
+
+	p1.join()
+	p2.join()
+	# p3.join()
+	# p4.join()
+
+	answers = []
+	answers.append(ans1)
+	answers.append(ans2)
+	# answers.append(ans3)
+	# answers.append(ans4)
+
+	prevMin = 10000000000
+	clusters = {}
+	for a in answers:
+		if a[1] < prevMin:
+			prevMin = a[1]
+			clusters = a[0]
+	return clusters
+
+
+country_graph(threading())
+
 
