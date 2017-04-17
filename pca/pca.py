@@ -160,9 +160,19 @@ def write_csv_from_mat(np_mat, keys_used, filename):
         for ele in np.nditer(row):
             f.write(","+str(ele))
         f.write("\n")
-    f.close()    
+    f.close()
+
+def group_indicators(imap):
+    indicator_groups = {}
+    for indicator in list(imap.keys()):
+        group = indicator.split(".")[0]
+        curr_grouping = indicator_groups.get(group, [])
+        curr_grouping.append(indicator)
+        indicator_groups[group] = curr_grouping
+    return indicator_groups
 
 np_mat, keys_used, u_reduce, imap = reduce_from_csv("recent_compact_2013.csv")
-write_csv_from_mat(np_mat, keys_used, "pca_2013.csv")
-write_pca_mat(u_reduce, imap, "pca_mat.csv")
+# write_csv_from_mat(np_mat, keys_used, "pca_2013.csv")
+# write_pca_mat(u_reduce, imap, "pca_mat.csv")
+print(len(list(group_indicators(imap).items())))
 

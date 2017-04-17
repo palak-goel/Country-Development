@@ -18,7 +18,7 @@ def top_factors(nLargest, attribute):
 	original = read_csv()
 	large_factors = largest['EMPTY']
 	for index, factor in large_factors.iteritems():
-		value = original.loc[original['EMPTY'] == factor][attribute].iloc[0]
+		value = original.loc[original['EMPTY'] == factor][attribute]
 		print(factor)
 		print(value)
 
