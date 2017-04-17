@@ -122,7 +122,7 @@ def minimize(K, iterations, ans):
 			ans[1] = array[1]
 			prevMin = array[1]
 	#country_graph(ans)
-
+	return prevMin
 #This will create the graph we use to determine the number of clusters using elbow
 def graph():
 	xVal = []
@@ -130,7 +130,7 @@ def graph():
 	for i in range(1,21):
 		print(i)
 		xVal.append(i)
-		yVal.append(minimize(i))
+		yVal.append(minimize(i, 1000, [0,0]))
 	print(xVal)
 	print(yVal)
 	plt.plot(xVal, yVal)
@@ -175,8 +175,8 @@ def threading():
 	# ans3 = manager.list(range(2))
 	# ans4 = manager.list(range(2))
 
-	p1 = Process(target = minimize, args = (6,250, ans1))
-	p2 = Process(target = minimize, args = (6,250, ans2))
+	p1 = Process(target = minimize, args = (5,5000, ans1))
+	p2 = Process(target = minimize, args = (5,5000, ans2))
 	# p3 = Process(target = minimize, args = (6,250, ans3))
 	# p4 = Process(target = minimize, args = (6,250, ans4))
 
@@ -206,5 +206,5 @@ def threading():
 
 
 country_graph(threading())
-
+#graph()
 
