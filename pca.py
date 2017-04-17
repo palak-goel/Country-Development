@@ -130,7 +130,23 @@ def reduce_from_csv(filename):
     u, s, v = np.linalg.svd(sigma)
     u_reduce = pca(u, s, VARIANCE_THRESHOLD)
     reduced_mat = np_mat * u_reduce
-    return reduced_mat, keys_used
+    return reduced_mat, keys_used, u_reduce, imap
+
+def write_pca_mat(u_reduce, imap, filename):
+    f = open(filename, 'w')
+    imap_items = list(imap.items())
+    imap_items.sort(key=lambda x: x[1])
+    num_cols = u_reduce.shape[1]
+    f.write("EMPTY")
+    for i in range(num_cols):
+        f.write(",attr" + str(i))
+    f.write("\n")
+    for p, row in enumerate(u_reduce):
+        f.write(imap_items[p][0])
+        for ele in np.nditer(row): 
+            f.write(","+str(ele))
+        f.write("\n")
+    f.close()
 
 def write_csv_from_mat(np_mat, keys_used, filename):
     f = open(filename, 'w')
@@ -146,6 +162,7 @@ def write_csv_from_mat(np_mat, keys_used, filename):
         f.write("\n")
     f.close()    
 
-np_mat, keys_used = reduce_from_csv("recent_compact_2013.csv")
+np_mat, keys_used, u_reduce, imap = reduce_from_csv("recent_compact_2013.csv")
 write_csv_from_mat(np_mat, keys_used, "pca_2013.csv")
+write_pca_mat(u_reduce, imap, "pca_mat.csv")
 
