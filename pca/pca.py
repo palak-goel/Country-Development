@@ -132,6 +132,74 @@ def reduce_from_csv(filename):
     reduced_mat = np_mat * u_reduce
     return reduced_mat, keys_used, u_reduce, imap
 
+def get_first_principal_components(filename):
+    data = standardize_mapping(create_map(filename))
+    icpi = indicator_count_per_indicator(data)
+    imap = create_indicator_mapping(icpi)
+    subsection_map = create_subsection_mapping(imap)
+    means = indicator_mean_per_indicator(data)
+    linear_combinations = {}
+    for subsection in subsection_map:
+        relevant_indicators = set(subsection_map[subsection])
+        info_matrix, keys_used = [], []
+        sub_imap = {}
+        default_row = []
+        count = 0
+        for indicator in relevant_indicators:
+            default_row.append(means[indicator])
+            sub_imap[indicator] = count
+            count += 1 
+        for cty in data:
+            cty_map = data[cty]
+            row = default_row[:]
+            for key in cty_map:
+                if key in relevant_indicators:
+                    row[sub_imap[key]] = cty_map[key]
+            info_matrix.append(row)
+        np_submat = np.matrix(info_matrix)
+        m = len(np_submat)
+        sigma = np_submat.T * np_submat / m
+        u, s, v = np.linalg.svd(sigma)
+        u_reduce = u[:,:1].T.tolist()
+        u_reduce_list = [item for sublist in u_reduce for item in sublist]
+        linear_comb = {}
+        sub_imap_items = list(sub_imap.items())
+        for p, ele in enumerate(u_reduce_list):
+            linear_comb[sub_imap_items[p][0]] = ele
+        linear_combinations[subsection] = linear_comb
+    return data, linear_combinations
+
+def generate_lc_mat(data, lcs):
+    info_matrix = []
+    attr_map = {}
+    ctys_in_order = []
+    means = indicator_mean_per_indicator(data)
+    count = 0
+    for lc in lcs: 
+        attr_map[lc] = count
+        count += 1
+    for cty in data:
+        ctys_in_order.append(cty)
+        cty_record = data[cty]
+        row = []
+        for lc in lcs: 
+            curr_lc = lcs[lc]
+            attr = 0
+            for key in curr_lc: 
+                attr += cty_record.get(key, means[key])
+            row.append(attr)
+        info_matrix.append(row)
+    np_mat = np.matrix(info_matrix)
+    m = len(np_mat)
+    sigma = np_mat.T * np_mat / m
+    u, s, v = np.linalg.svd(sigma)
+
+    #CHANGE LATER
+    u_reduce = pca(u, s, VARIANCE_THRESHOLD)
+    reduced_mat = np_mat * u_reduce
+    return reduced_mat, ctys_in_order
+
+
 def write_pca_mat(u_reduce, imap, filename):
     f = open(filename, 'w')
     imap_items = list(imap.items())
@@ -160,9 +228,9 @@ def write_csv_from_mat(np_mat, keys_used, filename):
         for ele in np.nditer(row):
             f.write(","+str(ele))
         f.write("\n")
-    f.close()
+    f.close()    
 
-def group_indicators(imap):
+def create_subsection_mapping(imap):
     indicator_groups = {}
     for indicator in list(imap.keys()):
         group = indicator.split(".")[0]
@@ -174,5 +242,8 @@ def group_indicators(imap):
 np_mat, keys_used, u_reduce, imap = reduce_from_csv("recent_compact_2013.csv")
 # write_csv_from_mat(np_mat, keys_used, "pca_2013.csv")
 # write_pca_mat(u_reduce, imap, "pca_mat.csv")
-print(len(list(group_indicators(imap).items())))
+data, lcs = get_first_principal_components("recent_compact_2013.csv")
+double_reduced_mat, ctys_in_order = generate_lc_mat(data, lcs)
+write_csv_from_mat(double_reduced_mat, ctys_in_order, "pca_double_reduced_2013.csv")
+
 
