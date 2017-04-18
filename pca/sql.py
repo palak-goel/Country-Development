@@ -26,7 +26,7 @@ def gni_graph(filename):
     for row in c.execute(
                         # SQL statement 
                         """
-                            SELECT   CountryCode, IndicatorCode, Value 
+                            SELECT   CountryCode, Year, Value 
                             FROM     Indicators 
                             WHERE    IndicatorCode="NY.GNP.PCAP.KD";
                          """ ):
