@@ -3,8 +3,11 @@ import csv
 import matplotlib.pyplot as plt
 from collections import defaultdict
 from collections import OrderedDict
-import plotly.plotly as py
-import plotly.graph_objs as go
+#import plotly.plotly as py
+#import plotly.graph_objs as go
+from plotly.offline import download_plotlyjs, init_notebook_mode, plot
+from plotly.graph_objs import *
+init_notebook_mode()
 import numpy as np
 
 countries = defaultdict(dict)
@@ -33,20 +36,28 @@ plt.legend()
 plt.savefig("GNI")
 '''
 to_plot=[]
+x = []
+y = []
 slopes = {}
 for ctry in keys:
 	dta = countries[ctry]
 	_x = list(dta.keys())
 	_y = list(dta.values())
-	tr = go.Scatter(
+	tr = Scatter(
 		x = _x,
 		y = _y,
 		name=ctry)
-	to_plot.append(tr)
+	#to_plot.append(tr)
 	m, b = np.linalg.lstsq(np.vstack([_x, np.ones(len(_x))]).T, _y)[0]
+	x.append(m)
+	y.append(b)
+	#to_plot.append(tr)
 	slopes[ctry] = m,b
 
 ord = OrderedDict(sorted(slopes.items(), key=lambda x: abs(x[1][0])))
 print(ord)
 
-#py.iplot(to_plot, filename="test")
+obj = {"data": [Scatter(x=x, y=y)],"layout": Layout(title="hello world")}
+
+#py.iplotx
+plot(obj)
