@@ -197,7 +197,7 @@ def generate_lc_mat(data, lcs):
     #CHANGE LATER
     u_reduce = pca(u, s, VARIANCE_THRESHOLD)
     reduced_mat = np_mat * u_reduce
-    return reduced_mat, ctys_in_order
+    return np_mat, reduced_mat, ctys_in_order
 
 
 def write_pca_mat(u_reduce, imap, filename):
@@ -243,7 +243,7 @@ np_mat, keys_used, u_reduce, imap = reduce_from_csv("recent_compact_2013.csv")
 # write_csv_from_mat(np_mat, keys_used, "pca_2013.csv")
 # write_pca_mat(u_reduce, imap, "pca_mat.csv")
 data, lcs = get_first_principal_components("recent_compact_2013.csv")
-double_reduced_mat, ctys_in_order = generate_lc_mat(data, lcs)
-write_csv_from_mat(double_reduced_mat, ctys_in_order, "pca_double_reduced_2013.csv")
+reduced_mat, double_reduced_mat, ctys_in_order = generate_lc_mat(data, lcs)
+write_csv_from_mat(reduced_mat, ctys_in_order, "pca_LCs_2013.csv")
 
 
