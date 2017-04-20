@@ -102,6 +102,22 @@ def generate_data_matrix(map_of_maps):
             info_matrix.append(row)
     return info_matrix, keys_used
 
+def generate_data_matrix_for_imputation(map_of_maps):
+    icpc = indicator_count_per_country(map_of_maps)
+    icpi = indicator_count_per_indicator(map_of_maps)
+    imap = create_indicator_mapping(icpi)
+    num_indicators = len(imap.keys())
+    info_matrix = []
+    keys_used = []
+    for key in map_of_maps:
+        keys_used.append(key)
+        curr_map = map_of_maps[key]
+        row = ["" for i in range(num_indicators)]
+        for indicator in curr_map:
+            row[imap[indicator]] = str(curr_map.get(indicator, ""))
+        info_matrix.append(row)
+    return info_matrix, imap, keys_used
+
 def find_k(s, threshold):
     #min k st. retained var > threshold
     tot = np.sum(s)
@@ -228,7 +244,21 @@ def write_csv_from_mat(np_mat, keys_used, filename):
         for ele in np.nditer(row):
             f.write(","+str(ele))
         f.write("\n")
-    f.close()    
+    f.close()
+
+def write_csv_from_mat_with_nulls(imat, imap, keys_used, filename):
+    f = open(filename, 'w')
+    indicators_as_items = sorted(list(imap.items()), key=lambda x: x[1])
+    row_length = len(indicators_as_items)
+    default_row = ["" for i in range(row_length)]
+    f.write("Country")
+    for tup in indicators_as_items:
+        f.write(","+tup[0])
+    f.write("\n")
+    for p, row in enumerate(imat):
+        f.write(keys_used[p]+",")
+        f.write(",".join(row)+"\n")
+    f.close()
 
 def create_subsection_mapping(imap):
     indicator_groups = {}
@@ -239,11 +269,13 @@ def create_subsection_mapping(imap):
         indicator_groups[group] = curr_grouping
     return indicator_groups
 
-np_mat, keys_used, u_reduce, imap = reduce_from_csv("recent_compact_2013.csv")
+# np_mat, keys_used, u_reduce, imap = reduce_from_csv("recent_compact_2013.csv")
 # write_csv_from_mat(np_mat, keys_used, "pca_2013.csv")
 # write_pca_mat(u_reduce, imap, "pca_mat.csv")
-data, lcs = get_first_principal_components("recent_compact_2013.csv")
-reduced_mat, double_reduced_mat, ctys_in_order = generate_lc_mat(data, lcs)
-write_csv_from_mat(reduced_mat, ctys_in_order, "pca_LCs_2013.csv")
+# data, lcs = get_first_principal_components("recent_compact_2013.csv")
+# reduced_mat, double_reduced_mat, ctys_in_order = generate_lc_mat(data, lcs)
+# write_csv_from_mat(reduced_mat, ctys_in_order, "pca_LCs_2013.csv")
+imat, imap, keys_used = generate_data_matrix_for_imputation(create_map("recent_compact_2013.csv"))
+write_csv_from_mat_with_nulls(imat, imap, keys_used, "2013_mice.csv")
 
 
