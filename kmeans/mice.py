@@ -6,6 +6,9 @@ import statistics
 from collections import defaultdict
 import statsmodels.formula.api as smf
 
+#number of cols to do OLS on
+SUBSET_SIZE = 200
+
 # Returns a function that produces a random value from a normal distribution as 
 # specified with the given data
 def gen_distr_producer(d):
@@ -30,7 +33,7 @@ def gen_nans(df, cols, to_check):
 		n_dist = gen_distr_producer(df[c])
 		for i in to_check[c]:
 			df.ix[i, c] = n_dist()
-		gen_ols(df, c, to_check[c])
+		#gen_ols(df, c, to_check[c])
 
 # Predict given column and substitute the values in "to check" with predicted
 def gen_ols(df, col, to_check):
@@ -43,11 +46,11 @@ def gen_ols(df, col, to_check):
 #setting up
 df = pd.read_csv("2013_mice.csv")
 df.dropna(how="all", inplace=True)
-df.rename(columns=lambda x: x.strip(), inplace=True)
-#df = pd.DataFrame(df, index=list(df["Country"]))
+df.rename(columns=lambda x: x.strip().replace(".", ""), inplace=True)
 columns = list(df.columns)
 columns.remove("Country")
-params = "+".join(columns)
+#parameters (columns to regress on) need to be randomized, fixed rn
+params = "+".join(columns[:SUBSET_SIZE]) 
 rows, cols = df.shape
 na_vals = defaultdict(list)
 
@@ -57,11 +60,14 @@ for c, v in itertools.product(columns, range(rows)):
 		na_vals[c].append(v)
 
 #iteration
-df_prev = df.copy()
-while not_done(df, df_prev):
-	gen_nans(df, columns, na_vals)
 
-#a = gen_distr_producer(df[" GC.FIN.DOMS.GD.ZS"])
+#still needs to be fleshed out more
+
+df_prev = df.copy()
+gen_nans(df, columns, na_vals)
+#while not_done(df, df_prev):
+#	gen_ols(df, columns, na_vals)
+
 
 
 
