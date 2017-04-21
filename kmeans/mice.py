@@ -65,7 +65,7 @@ def gen_ols(df, cols, to_check):
 			df.ix[i, c] = pred[i]
 
 #setting up
-df = pd.read_csv("2013_mice.csv")
+df = pd.read_csv("~/bigdata/pca/2013_mice.csv")
 df.dropna(how="all", inplace=True)
 
 #map of col names for printing properly later
