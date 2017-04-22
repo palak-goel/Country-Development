@@ -11,7 +11,7 @@ init_notebook_mode()
 import numpy as np
 
 countries = defaultdict(dict)
-f = open('gni_test_file.csv', 'r', encoding="utf8")
+f = open('../gni_test_file.csv', 'r', encoding="utf8")
 reader = csv.DictReader(f)
 
 for dta in reader:
@@ -20,7 +20,7 @@ for dta in reader:
 f.close()
 
 keys = []
-f = open('kmeans/pca_2013.csv')
+f = open('pca_2013.csv')
 reader = csv.DictReader(f)
 for dta in reader:
 	keys.append(dta["Country"])
