@@ -9,18 +9,26 @@ import threading
 from multiprocessing import Process
 from multiprocessing import Manager
 
-#distance between two points
+
+ATTRIBUTES = 51
+
+"""
+distance between two points
+"""
 def distance(A, B):
 	return np.sum( (A-B)**2 )
-
-#mean of an array
+"""
+mean of an array
+"""
 def mean(data):
-	meanCoord = np.zeros(86, int)
+	meanCoord = np.zeros(ATTRIBUTES, int)
 	for point in data:
 		meanCoord = meanCoord + np.array(point)
 	return meanCoord/len(data)
 
-#error
+"""
+calculates point scatter (error of cluster) MSE
+"""
 def scatter(data, means):
 	keys = data.keys()
 	distances = {}
@@ -35,15 +43,20 @@ def scatter(data, means):
 	for k in distances:
 		d += distances[k]
 	return (0.5 * d)
-
-#returns true if two arrays are equal
+"""
+returns true if two arrays are equal
+"""
 def equals(A, B):
 	for i in range(len(A)):
 		if A[i] is not B[i]:
 			return False
 	return True
 
-# K MEANS CLUSTERING
+"""
+K MEANS CLUSTERING
+Input: number of clusters, dataframe
+Output: cluster in the form of a dictionary
+"""
 def compute_cluster(clusters, df):
 	acCountries = df['Country']
 	acCountries = np.array(acCountries)
@@ -51,21 +64,32 @@ def compute_cluster(clusters, df):
 	X = np.array(X)
 	N = len(X)
 
-	#At this point data is loaded.
+	"""At this point data is loaded."""
 	K = clusters
 
-	# set initial clusters 
 	aXmeans_byCluster = []
-	for i in range(K):
+
+	
+	"""Set initial clusters (random)
+
+	
+	for i in range(K-2):
 		cluster = []
-		for j in range(1,87):
+		for j in range(1,ATTRIBUTES+1):
 			maximum = max(df['x'+str(j)])
 			minimum = min(df['x'+str(j)])
 			r = random.uniform(minimum, maximum)
 			cluster.append(r)
 		aXmeans_byCluster.append(cluster)
-	
-	###################
+	"""
+
+	"""Set initial clusters (points)"""
+
+	usa = country_row("USA")
+	rwanda = country_row("RWA")
+
+	aXmeans_byCluster.append(usa)
+	aXmeans_byCluster.append(rwanda)
 
 	converged = False
 	#iterate until converged
@@ -113,7 +137,7 @@ def compute_cluster(clusters, df):
 # tLock = threading.Lock()
 def minimize(K, iterations, ans):
 	prevMin = 10000000000
-	df = pd.read_csv('pca_2013.csv')
+	df = pd.read_csv('../pca/pca_LCs_2013.csv')
 	for i in range(iterations): 
 		array = compute_cluster(K, df)
 		print(i)
@@ -122,15 +146,16 @@ def minimize(K, iterations, ans):
 			ans[1] = array[1]
 			prevMin = array[1]
 	#country_graph(ans)
+	print(prevMin)
 	return prevMin
 #This will create the graph we use to determine the number of clusters using elbow
 def graph():
 	xVal = []
 	yVal = []
-	for i in range(1,21):
+	for i in range(1,16):
 		print(i)
 		xVal.append(i)
-		yVal.append(minimize(i, 1000, [0,0]))
+		yVal.append(minimize(i, 100, [0,0]))
 	print(xVal)
 	print(yVal)
 	plt.plot(xVal, yVal)
@@ -175,8 +200,8 @@ def threading():
 	# ans3 = manager.list(range(2))
 	# ans4 = manager.list(range(2))
 
-	p1 = Process(target = minimize, args = (5,5000, ans1))
-	p2 = Process(target = minimize, args = (5,5000, ans2))
+	p1 = Process(target = minimize, args = (5,500, ans1))
+	p2 = Process(target = minimize, args = (5,500, ans2))
 	# p3 = Process(target = minimize, args = (6,250, ans3))
 	# p4 = Process(target = minimize, args = (6,250, ans4))
 
@@ -204,7 +229,20 @@ def threading():
 			clusters = a[0]
 	return clusters
 
+def country_row(country):
+	df = pd.read_csv('../pca/pca_LCs_2013.csv')
+	result = df.loc[(df["Country"] == country)]
+	ans = result.values.T.tolist()
+	final = []
+	for i in range(1,len(ans)):
+		a = ans[i]
+		final.append(float(a[0]))
+	return final
 
-country_graph(threading())
+df = pd.read_csv('../pca/pca_LCs_2013.csv')
+clusters = compute_cluster(5, df)
+country_graph(clusters[0])
+
+#country_graph(threading())
 #graph()
 
