@@ -4,7 +4,7 @@ RANDOMNESS_THRESHOLD = 0.05
 
 def gen_mar(filename, num_row, num_col):
     f = open(filename, 'w')
-    rand_vals = np.random.rand(num_row, num_col)
+    rand _vals = np.random.rand(num_row, num_col)
     for i in range(num_row):
         for j in range(num_col):
             if rand_vals[i][j] > RANDOMNESS_THRESHOLD:
