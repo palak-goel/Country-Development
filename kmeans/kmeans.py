@@ -10,7 +10,7 @@ from multiprocessing import Process
 from multiprocessing import Manager
 
 
-ATTRIBUTES = 51
+ATTRIBUTES = 6
 
 """
 distance between two points
@@ -25,6 +25,15 @@ def mean(data):
 	for point in data:
 		meanCoord = meanCoord + np.array(point)
 	return meanCoord/len(data)
+
+"""
+returns true if two arrays are equal
+"""
+def equals(A, B):
+	for i in range(len(A)):
+		if A[i] is not B[i]:
+			return False
+	return True
 
 """
 calculates point scatter (error of cluster) MSE
@@ -43,14 +52,47 @@ def scatter(data, means):
 	for k in distances:
 		d += distances[k]
 	return (0.5 * d)
-"""
-returns true if two arrays are equal
-"""
-def equals(A, B):
-	for i in range(len(A)):
-		if A[i] is not B[i]:
-			return False
-	return True
+
+def country_row(country, df):
+	result = df.loc[(df["Country"] == country)]
+	ans = result.values.T.tolist()
+	final = []
+	for i in range(1,len(ans)):
+		a = ans[i]
+		final.append(float(a[0]))
+	return final
+
+#This is called on a clusters dictionary and creates a world map visualization
+def country_graph(clusters):
+	country_to_cluster = {}
+	for k in clusters.keys():
+		countries = clusters[k]
+		for c in countries:
+			country_to_cluster[c] = k
+
+	locations_dict = {}
+	clusters_dict = {}
+
+	count = 0
+	for k in country_to_cluster.keys():
+		count = count + 1
+		locations_dict[count] = k
+		clusters_dict[count] = country_to_cluster[k]
+
+	df = pd.DataFrame({'Country' : locations_dict, 'Cluster' : clusters_dict})
+
+	data = [dict( type = 'choropleth', locations = df['Country'],
+            z = df['Cluster'],
+            colorbar = dict(title = 'Cluster'))]
+
+	layout = dict(title = 'Country Clusters', geo = dict(projection = dict(type = 'Mercator')))
+
+	fig = dict(data=data, layout=layout)
+	plot(fig, validate=True, filename='count-cluster')
+
+#def initial_clusters(k, df):
+#	countries = df['Country']
+
 
 """
 K MEANS CLUSTERING
@@ -73,7 +115,7 @@ def compute_cluster(clusters, df):
 	"""Set initial clusters (random)
 
 	
-	for i in range(K-2):
+	for i in range(K):
 		cluster = []
 		for j in range(1,ATTRIBUTES+1):
 			maximum = max(df['x'+str(j)])
@@ -83,13 +125,21 @@ def compute_cluster(clusters, df):
 		aXmeans_byCluster.append(cluster)
 	"""
 
-	"""Set initial clusters (points)"""
+	"""Set initial clusters (points)	"""
 
-	usa = country_row("USA")
-	rwanda = country_row("RWA")
+	usa = country_row("USA", df)
+	gbr = country_row("GBR", df)
+	ago = country_row("AGO", df)
+	kgz = country_row("KGZ", df)
+	bra = country_row("BRA", df)
+
 
 	aXmeans_byCluster.append(usa)
-	aXmeans_byCluster.append(rwanda)
+	aXmeans_byCluster.append(gbr)
+	aXmeans_byCluster.append(ago)
+	aXmeans_byCluster.append(kgz)
+	aXmeans_byCluster.append(bra)
+
 
 	converged = False
 	#iterate until converged
@@ -132,12 +182,15 @@ def compute_cluster(clusters, df):
 	array.append(scatter(cluster_data, aXmeans_byCluster)) 
 	return array
 
-#runs compute cluster 100,000 times and returns the cluster with minimum error
-#K = the number of clusters
-# tLock = threading.Lock()
+"""
+runs compute cluster multiple times and returns the cluster with minimum error
+K = the number of clusters
+iterations = how many times to run the cluster
+ans = dictionary to be returned
+"""
 def minimize(K, iterations, ans):
 	prevMin = 10000000000
-	df = pd.read_csv('../pca/pca_LCs_2013.csv')
+	df = pd.read_csv('../csv/double_reduced_mat_2013_mice.csv')
 	for i in range(iterations): 
 		array = compute_cluster(K, df)
 		print(i)
@@ -148,6 +201,7 @@ def minimize(K, iterations, ans):
 	#country_graph(ans)
 	print(prevMin)
 	return prevMin
+
 #This will create the graph we use to determine the number of clusters using elbow
 def graph():
 	xVal = []
@@ -155,7 +209,7 @@ def graph():
 	for i in range(1,16):
 		print(i)
 		xVal.append(i)
-		yVal.append(minimize(i, 100, [0,0]))
+		yVal.append(threading(i, 100))
 	print(xVal)
 	print(yVal)
 	plt.plot(xVal, yVal)
@@ -163,63 +217,24 @@ def graph():
 	plt.xlabel('Number of Clusters')
 	plt.show()
 
-#This is called on a clusters dictionary and creates a world map visualization
-def country_graph(clusters):
-	country_to_cluster = {}
-	for k in clusters.keys():
-		countries = clusters[k]
-		for c in countries:
-			country_to_cluster[c] = k
 
-	locations_dict = {}
-	clusters_dict = {}
-
-	count = 0
-	for k in country_to_cluster.keys():
-		count = count + 1
-		locations_dict[count] = k
-		clusters_dict[count] = country_to_cluster[k]
-
-	df = pd.DataFrame({'Country' : locations_dict, 'Cluster' : clusters_dict})
-
-	data = [dict( type = 'choropleth', locations = df['Country'],
-            z = df['Cluster'],
-            colorbar = dict(title = 'Cluster'))]
-
-	layout = dict(title = 'Country Clusters', geo = dict(projection = dict(type = 'Mercator')))
-
-	fig = dict(data=data, layout=layout)
-	plot(fig, validate=True, filename='count-cluster')
-
-#does threading, returns cluster dictionary	
-def threading():
+#Concurrently calls the minimize() function to speed it up, returns cluster dictionary	
+def threading(k, iterate):
 	manager = Manager()
-
 	ans1 = manager.list(range(2))
 	ans2 = manager.list(range(2))
-	# ans3 = manager.list(range(2))
-	# ans4 = manager.list(range(2))
-
-	p1 = Process(target = minimize, args = (5,500, ans1))
-	p2 = Process(target = minimize, args = (5,500, ans2))
-	# p3 = Process(target = minimize, args = (6,250, ans3))
-	# p4 = Process(target = minimize, args = (6,250, ans4))
+	print(iterate/2)
+	p1 = Process(target = minimize, args = (k,int(iterate/2), ans1))
+	p2 = Process(target = minimize, args = (k,int(iterate/2), ans2))
 
 	p1.start()
 	p2.start()
-	# p3.start()
-	# p4.start()
-
 	p1.join()
 	p2.join()
-	# p3.join()
-	# p4.join()
 
 	answers = []
 	answers.append(ans1)
 	answers.append(ans2)
-	# answers.append(ans3)
-	# answers.append(ans4)
 
 	prevMin = 10000000000
 	clusters = {}
@@ -227,22 +242,13 @@ def threading():
 		if a[1] < prevMin:
 			prevMin = a[1]
 			clusters = a[0]
+	print(prevMin)
 	return clusters
+	#return(prevMin)
 
-def country_row(country):
-	df = pd.read_csv('../pca/pca_LCs_2013.csv')
-	result = df.loc[(df["Country"] == country)]
-	ans = result.values.T.tolist()
-	final = []
-	for i in range(1,len(ans)):
-		a = ans[i]
-		final.append(float(a[0]))
-	return final
-
-df = pd.read_csv('../pca/pca_LCs_2013.csv')
-clusters = compute_cluster(5, df)
-country_graph(clusters[0])
-
-#country_graph(threading())
 #graph()
+#c = threading(2, 1000)
+c = compute_cluster(5, pd.read_csv('../csv/double_reduced_mat_2013_mice.csv'))
+country_graph(c[0])
+
 
