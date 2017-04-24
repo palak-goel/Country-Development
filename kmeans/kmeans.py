@@ -62,8 +62,42 @@ def country_row(country, df):
 		final.append(float(a[0]))
 	return final
 
+def avg_gni(countryList, yr):
+	df = pd.read_csv('../gni_test_file.csv')
+	#print(df)
+	tot = 0
+	totGni = 0
+	for c in countryList:
+		gni_data = df.loc[(df['Country'].astype(str) == c) & (df['Year'].astype(str) == yr)]
+		gni = gni_data.values.T.tolist()[2]
+		if (len(gni) > 0):
+			tot += 1
+			totGni += float(gni[0])
+	return float(totGni/tot)
+
+
+def cluster_by_GNI(clusters, yr):
+	cluster_gni = []
+	for c in clusters.keys():
+		clust = clusters[c]
+		tup = (clust, avg_gni(clust, yr))
+		cluster_gni.append(tup)
+	values = sorted(cluster_gni, key=lambda x: x[1])[::-1]
+	cluster_gni_as_dict = {}
+	ct = 0
+	for t in values:
+		cluster_gni_as_dict[ct] = t[0]
+		ct+=1
+	return cluster_gni_as_dict
+
+
 #This is called on a clusters dictionary and creates a world map visualization
-def country_graph(clusters):
+def country_graph(clusters, yr):
+	print("INPUT")
+	print(clusters)
+	clusters = cluster_by_GNI(clusters, '2013')
+	print("OUT")
+	print(clusters)
 	country_to_cluster = {}
 	for k in clusters.keys():
 		countries = clusters[k]
@@ -79,16 +113,22 @@ def country_graph(clusters):
 		locations_dict[count] = k
 		clusters_dict[count] = country_to_cluster[k]
 
+	scl = [[0.0, '#8CB369'],[0.2, '#B1DD83'],[0.4, '#F4E285'],\
+            [0.6, '#F2CA7E'],[0.8, '#F78E69'],[1.0, 'rgb(214, 228, 225)']]
+
 	df = pd.DataFrame({'Country' : locations_dict, 'Cluster' : clusters_dict})
 
 	data = [dict( type = 'choropleth', locations = df['Country'],
+			colorscale = scl,
+        	autocolorscale = False,
             z = df['Cluster'],
-            colorbar = dict(title = 'Cluster'))]
+            showscale = False)]
 
-	layout = dict(title = 'Country Clusters', geo = dict(projection = dict(type = 'Mercator')))
+	layout = dict(title = 'Country Clusters '+yr, geo = dict(projection = dict(type = 'Mercator')))
 
 	fig = dict(data=data, layout=layout)
-	plot(fig, validate=True, filename='count-cluster')
+	file_name = 'cluster'+yr+'.html'
+	plot(fig, validate=True, filename=file_name)
 
 #def initial_clusters(k, df):
 #	countries = df['Country']
@@ -195,9 +235,8 @@ K = the number of clusters
 iterations = how many times to run the cluster
 ans = dictionary to be returned
 """
-def minimize(K, iterations, ans):
+def minimize(df, K, iterations, ans):
 	prevMin = 10000000000
-	df = pd.read_csv(FILE)
 	for i in range(iterations): 
 		array = compute_cluster(K, df)
 		print(i)
@@ -205,18 +244,17 @@ def minimize(K, iterations, ans):
 			ans[0] = array[0]
 			ans[1] = array[1]
 			prevMin = array[1]
-	#country_graph(ans)
 	print(prevMin)
 	return prevMin
 
 #This will create the graph we use to determine the number of clusters using elbow
-def graph():
+def graph(df, iterations):
 	xVal = []
 	yVal = []
 	for i in range(1,16):
 		print(i)
 		xVal.append(i)
-		yVal.append(threading(i, 100))
+		yVal.append(threading(df, i, iterations)[1])
 	print(xVal)
 	print(yVal)
 	plt.plot(xVal, yVal)
@@ -226,13 +264,13 @@ def graph():
 
 
 #Concurrently calls the minimize() function to speed it up, returns cluster dictionary	
-def threading(k, iterate):
+def threading(df, k, iterate):
 	manager = Manager()
 	ans1 = manager.list(range(2))
 	ans2 = manager.list(range(2))
 	print(iterate/2)
-	p1 = Process(target = minimize, args = (k,int(iterate/2), ans1))
-	p2 = Process(target = minimize, args = (k,int(iterate/2), ans2))
+	p1 = Process(target = minimize, args = (df, k,int(iterate/2), ans1))
+	p2 = Process(target = minimize, args = (df, k,int(iterate/2), ans2))
 
 	p1.start()
 	p2.start()
@@ -250,13 +288,8 @@ def threading(k, iterate):
 			prevMin = a[1]
 			clusters = a[0]
 	print(prevMin)
-	return clusters
-	#return(prevMin)
+	return (clusters, prevMin)
 
-#graph()
-#c = threading(2, 1000)
-#c = compute_cluster(5, pd.read_csv('../csv/double_reduced_mat_2013_mice.csv'))
-#country_graph(c[0])
 def random_selection(df, numClusters):
 	results = []
 	countries = df['Country']
@@ -270,9 +303,23 @@ def random_selection(df, numClusters):
 		ans.append(c[0])
 	return ans
 	
-
+#compute_cluster()
 #df = pd.read_csv('../csv/double_reduced_mat_2013_mice.csv')
 #random_selection(df, 3)
 #graph()
-c = threading(4, 10000)
-country_graph(c)
+#c = threading(4, 10000)
+#country_graph(c)
+
+def getYear(csvFile):
+	#return csvFile.split('.')[0]
+	return '2013'
+
+def get_clusters(numClusters, csvFile, iterations, mode):
+	df = pd.read_csv(csvFile)
+	if mode == 'graph':
+		graph(df, iterations)
+	if mode == 'cluster':
+		cluster = threading(df, numClusters, iterations)[0]
+		country_graph(cluster, getYear(csvFile))
+
+get_clusters(3, FILE, 100, 'cluster')
