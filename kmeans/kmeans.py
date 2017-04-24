@@ -9,8 +9,8 @@ import threading
 from multiprocessing import Process
 from multiprocessing import Manager
 
-
-ATTRIBUTES = 6
+FILE = '../csv/reduced_mat_2013_mice.csv'
+ATTRIBUTES = 51
 
 """
 distance between two points
@@ -110,7 +110,11 @@ def compute_cluster(clusters, df):
 	K = clusters
 
 	aXmeans_byCluster = []
+	countries = random_selection(df, clusters)
 
+	for c in countries:
+		row = country_row(c, df)
+		aXmeans_byCluster.append(row)
 	
 	"""Set initial clusters (random)
 
@@ -125,7 +129,7 @@ def compute_cluster(clusters, df):
 		aXmeans_byCluster.append(cluster)
 	"""
 
-	"""Set initial clusters (points)	"""
+	"""Set initial clusters (points)	
 
 	usa = country_row("USA", df)
 	gbr = country_row("GBR", df)
@@ -139,6 +143,9 @@ def compute_cluster(clusters, df):
 	aXmeans_byCluster.append(ago)
 	aXmeans_byCluster.append(kgz)
 	aXmeans_byCluster.append(bra)
+	"""
+
+
 
 
 	converged = False
@@ -190,7 +197,7 @@ ans = dictionary to be returned
 """
 def minimize(K, iterations, ans):
 	prevMin = 10000000000
-	df = pd.read_csv('../csv/double_reduced_mat_2013_mice.csv')
+	df = pd.read_csv(FILE)
 	for i in range(iterations): 
 		array = compute_cluster(K, df)
 		print(i)
@@ -248,7 +255,24 @@ def threading(k, iterate):
 
 #graph()
 #c = threading(2, 1000)
-c = compute_cluster(5, pd.read_csv('../csv/double_reduced_mat_2013_mice.csv'))
-country_graph(c[0])
+#c = compute_cluster(5, pd.read_csv('../csv/double_reduced_mat_2013_mice.csv'))
+#country_graph(c[0])
+def random_selection(df, numClusters):
+	results = []
+	countries = df['Country']
+	numCountries = len(countries)
+	for i in range(numClusters):
+		random_number = int(random.uniform(0, numCountries))
+		country = countries.ix[[random_number]]
+		results.append(country.values.T.tolist())
+	ans = []
+	for c in results:
+		ans.append(c[0])
+	return ans
+	
 
-
+#df = pd.read_csv('../csv/double_reduced_mat_2013_mice.csv')
+#random_selection(df, 3)
+#graph()
+c = threading(4, 10000)
+country_graph(c)
