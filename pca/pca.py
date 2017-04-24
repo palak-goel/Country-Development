@@ -291,10 +291,18 @@ def convert_mat_to_db(filename_r, filename_w):
 # write_csv_from_mat(np_mat, keys_used, "pca_2013.csv")
 # write_pca_mat(u_reduce, imap, "pca_mat.csv")
 # convert_mat_to_db("results.csv", "results_db_format.csv")
-data, lcs = get_first_principal_components("results_db_format.csv")
-reduced_mat, double_reduced_mat, ctys_in_order = generate_lc_mat(data, lcs)
-write_csv_from_mat(double_reduced_mat, ctys_in_order, "double_reduced_mat_2013_mice.csv")
-# imat, imap, keys_used = generate_data_matrix_for_imputation(create_map("recent_compact_2013.csv"))
-# write_csv_from_mat_with_nulls(imat, imap, keys_used, "2013_mice.csv")
+'''for i in range(1960, 2014):
+    name = str(i) + ".csv"
+    data, lcs = get_first_principal_components("data/mice/mice_" + name)
+    reduced_mat, double_reduced_mat, ctys_in_order = generate_lc_mat(data, lcs)
+    write_csv_from_mat(double_reduced_mat, ctys_in_order, "data/full/full_dr_" + name)
+    write_csv_from_mat(reduced_mat, ctys_in_order, "data/full/r_" + name)
+#data, lcs = get_first_principal_components("../data/results_db_format.csv")'''
+#reduced_mat, double_reduced_mat, ctys_in_order = generate_lc_mat(data, lcs)
+#write_csv_from_mat(double_reduced_mat, ctys_in_order, "double_reduced_mat_2013_mice.csv")
+#write_csv_from_mat(reduced_mat, ctys_in_order, "double_reduced_mat_2013_mice.csv")
+for i in range(1960, 2014):
+    imat, imap, keys_used = generate_data_matrix_for_imputation(create_map("data/compact_" + str(i) + ".csv"))
+    write_csv_from_mat_with_nulls(imat, imap, keys_used, "data/full/full_" + str(i) + ".csv")
 
 

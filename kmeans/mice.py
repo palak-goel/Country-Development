@@ -65,42 +65,41 @@ def gen_ols(df, cols, to_check):
 			df.ix[i, c] = pred[i]
 
 #setting up
-df = pd.read_csv("~/bigdata/pca/2013_mice.csv")
-df.dropna(how="all", inplace=True)
+for k in range(1960, 2014):
+	df = pd.read_csv("data/full/full_" + str(k) + ".csv")
+	df.dropna(how="all", inplace=True)
+	#map of col names for printing properly later
+	col_map = {}
+	for c in df.columns:
+		col_map[c.strip().replace(".", "")] = c
+	df.rename(columns=lambda x: x.strip().replace(".", ""), inplace=True)
+	columns = list(df.columns)
+	columns.remove("Country")
+	#parameters (columns to regress on) need to be randomized, fixed rn
+	#params = "+".join(columns[:SUBSET_SIZE]) 
+	rows, cols = df.shape
+	na_vals = defaultdict(list)
 
-#map of col names for printing properly later
-col_map = {}
-for c in df.columns:
-	col_map[c.strip().replace(".", "")] = c
-df.rename(columns=lambda x: x.strip().replace(".", ""), inplace=True)
-columns = list(df.columns)
-columns.remove("Country")
-#parameters (columns to regress on) need to be randomized, fixed rn
-#params = "+".join(columns[:SUBSET_SIZE]) 
-rows, cols = df.shape
-na_vals = defaultdict(list)
+	# getting all the missing values, putting them in a hash from column -> row index
+	for c, v in itertools.product(columns, range(rows)):
+		if math.isnan(df[c][v]):
+			na_vals[c].append(v)
+	#iteration
 
-# getting all the missing values, putting them in a hash from column -> row index
-for c, v in itertools.product(columns, range(rows)):
-	if math.isnan(df[c][v]):
-		na_vals[c].append(v)
-#iteration
-
-#still needs to be fleshed out more
-for _ in range(1):
-	df_prev = df.copy()
-	gen_nans(df, columns, na_vals)
-	gen_ols(df, columns, na_vals)
-	print("---")
-	print("iter done")
-	print("---")
-	#if done(df, df_prev, columns, na_vals):
-	#	break
-#while not_done(df, df_prev):
-#	gen_ols(df, columns, na_vals)
-
-df.rename(columns=lambda x: col_map[x], inplace=True)
-df.to_csv("results.csv", index=False)
+	#still needs to be fleshed out more
+	for _ in range(3):
+		df_prev = df.copy()
+		gen_nans(df, columns, na_vals)
+		gen_ols(df, columns, na_vals)
+		print("---")
+		print("iter done")
+		print("---")
+		#if done(df, df_prev, columns, na_vals):
+		#	break
+	#while not_done(df, df_prev):
+	#	gen_ols(df, columns, na_vals)
+	df.rename(columns=lambda x: col_map[x], inplace=True)
+	df.to_csv("data/mice/mice_" + str(k) + ".csv", index=False)
 
 
 
