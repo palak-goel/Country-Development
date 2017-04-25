@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import os
 
 #parameters to tune
 COMPLETENESS = 0.50
@@ -69,6 +70,7 @@ def indicator_stdev_per_indicator(map_of_maps):
             metadata[key] = math.sqrt(se_squared)
         #bandaid!!!!
         else:
+            print("warning, bad se: " + str(se_squared))
             metadata[key] = 0
     return metadata
 
@@ -287,13 +289,24 @@ def convert_mat_to_db(filename_r, filename_w):
                 f_w.write(cty+","+heading[p]+", "+ele+"\n")
     f_r.close()
     f_w.close()
+
+#makes files in interval [start, end]
+#does the intermediate conversion to the db format.
+#make sure the file names match the formats.
+def make_pca_files(start, end):
+    for i in range(start, end+1):
+        convert_mat_to_db(os.path.abspath("../data/mice_" + str(i) + ".csv"), os.path.abspath("../data/mice_db_" + str(i) + ".csv"))
+    for i in range(start, end+1):
+        data, lcs = get_first_principal_components(os.path.abspath("../data/mice_db_" + str(i) + ".csv"))
+        reduced_mat, double_reduced_mat, ctys_in_order = generate_lc_mat(data, lcs)
+        write_csv_from_mat(double_reduced_mat, ctys_in_order, os.path.abspath("../data/dr_mat_" + str(i) + "_mice.csv"))
+        write_csv_from_mat(reduced_mat, ctys_in_order, os.path.abspath("../data/r_mat_" + str(i) + "_mice.csv"))
+
+make_pca_files(1964, 1994)
 # np_mat, keys_used, u_reduce, imap = reduce_from_csv("recent_compact_2013.csv")
 # write_csv_from_mat(np_mat, keys_used, "pca_2013.csv")
 # write_pca_mat(u_reduce, imap, "pca_mat.csv")
 # convert_mat_to_db("results.csv", "results_db_format.csv")
-data, lcs = get_first_principal_components("results_db_format.csv")
-reduced_mat, double_reduced_mat, ctys_in_order = generate_lc_mat(data, lcs)
-write_csv_from_mat(double_reduced_mat, ctys_in_order, "double_reduced_mat_2013_mice.csv")
 # imat, imap, keys_used = generate_data_matrix_for_imputation(create_map("recent_compact_2013.csv"))
 # write_csv_from_mat_with_nulls(imat, imap, keys_used, "2013_mice.csv")
 
