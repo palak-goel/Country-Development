@@ -10,7 +10,7 @@ from multiprocessing import Process
 from multiprocessing import Manager
 
 FILE = '../csv/reduced_mat_2013_mice.csv'
-ATTRIBUTES = 51
+ATTRIBUTES = 0
 
 """
 distance between two points
@@ -21,6 +21,8 @@ def distance(A, B):
 mean of an array
 """
 def mean(data):
+	attributes = len(data)
+	#print(data)
 	meanCoord = np.zeros(ATTRIBUTES, int)
 	for point in data:
 		meanCoord = meanCoord + np.array(point)
@@ -78,6 +80,7 @@ def avg_gni(countryList, yr):
 
 def cluster_by_GNI(clusters, yr):
 	cluster_gni = []
+	print(clusters)
 	for c in clusters.keys():
 		clust = clusters[c]
 		tup = (clust, avg_gni(clust, yr))
@@ -302,24 +305,21 @@ def random_selection(df, numClusters):
 	for c in results:
 		ans.append(c[0])
 	return ans
-	
-#compute_cluster()
-#df = pd.read_csv('../csv/double_reduced_mat_2013_mice.csv')
-#random_selection(df, 3)
-#graph()
-#c = threading(4, 10000)
-#country_graph(c)
 
-def getYear(csvFile):
-	#return csvFile.split('.')[0]
-	return '2013'
-
-def get_clusters(numClusters, csvFile, iterations, mode):
+def get_clusters(numClusters, csvFile, iterations, mode, year):
 	df = pd.read_csv(csvFile)
+	global ATTRIBUTES
+	ATTRIBUTES = len(df.columns) - 1
 	if mode == 'graph':
 		graph(df, iterations)
 	if mode == 'cluster':
 		cluster = threading(df, numClusters, iterations)[0]
-		country_graph(cluster, getYear(csvFile))
+		country_graph(cluster, year)
 
-get_clusters(3, FILE, 100, 'cluster')
+def run():
+	for i in range(1960,2015):
+		path = '../data/mice' + str(i)
+		get_clusters(3, path, 1000, 'cluster', str(i))
+
+#run()
+get_clusters(3, FILE, 100, 'cluster', '2013')
