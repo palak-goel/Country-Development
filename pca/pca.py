@@ -294,15 +294,15 @@ def convert_mat_to_db(filename_r, filename_w):
 #does the intermediate conversion to the db format.
 #make sure the file names match the formats.
 def make_pca_files(start, end):
+    # for i in range(start, end+1):
+    #     convert_mat_to_db(os.path.abspath("../data/compact/compact_" + str(i) + ".csv"), os.path.abspath("../data/mice_db_" + str(i) + ".csv"))
     for i in range(start, end+1):
-        convert_mat_to_db(os.path.abspath("../data/mice_" + str(i) + ".csv"), os.path.abspath("../data/mice_db_" + str(i) + ".csv"))
-    for i in range(start, end+1):
-        data, lcs = get_first_principal_components(os.path.abspath("../data/mice_db_" + str(i) + ".csv"))
+        data, lcs = get_first_principal_components(os.path.abspath("../data/compact/compact_" + str(i) + ".csv"))
         reduced_mat, double_reduced_mat, ctys_in_order = generate_lc_mat(data, lcs)
         write_csv_from_mat(double_reduced_mat, ctys_in_order, os.path.abspath("../data/dr_mat_" + str(i) + "_mice.csv"))
         write_csv_from_mat(reduced_mat, ctys_in_order, os.path.abspath("../data/r_mat_" + str(i) + "_mice.csv"))
 
-make_pca_files(1964, 1994)
+make_pca_files(1995, 2012)
 # np_mat, keys_used, u_reduce, imap = reduce_from_csv("recent_compact_2013.csv")
 # write_csv_from_mat(np_mat, keys_used, "pca_2013.csv")
 # write_pca_mat(u_reduce, imap, "pca_mat.csv")
