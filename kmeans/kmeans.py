@@ -73,8 +73,16 @@ def avg_gni(countryList, yr):
 		gni_data = df.loc[(df['Country'].astype(str) == c) & (df['Year'].astype(str) == yr)]
 		gni = gni_data.values.T.tolist()[2]
 		if (len(gni) > 0):
+			print("HERE")
 			tot += 1
 			totGni += float(gni[0])
+			print(tot)
+			print(gni[0])
+			print(totGni)
+	print(countryList)
+	print(yr)
+	print(totGni)
+	print(tot)
 	return float(totGni/tot)
 
 
@@ -327,9 +335,9 @@ def run():
 	writer = csv.writer(csvfile)
 	writer.writerow( ('Year', 'Country', 'Cluster') )
 
-	for i in range(1964,2013):
-		path = '../data/dr_mat_' + str(i) + "_mice.csv"
-		get_clusters(3, path, 1000, 'cluster', str(i), writer)
+	for i in range(1988,2013):
+		path = '../data/subset/hdi_' + str(i) + ".csv"
+		get_clusters(3, path, 100, 'cluster', str(i), writer)
 
 run()
 #get_clusters(3, FILE, 100, 'cluster', '2013')
