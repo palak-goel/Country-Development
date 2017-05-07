@@ -93,12 +93,15 @@ def cluster_by_GNI(clusters, yr):
 		ct+=1
 	return cluster_gni_as_dict
 
+def write_to_file(locations_dict, clusters_dict, yr, writer):
+	for i in range(1,len(locations_dict.keys()) + 1):
+		writer.writerow((yr, locations_dict[i], clusters_dict[i]))
 
 #This is called on a clusters dictionary and creates a world map visualization
-def country_graph(clusters, yr):
+def country_graph(clusters, yr, writer):
 	print("INPUT")
 	print(clusters)
-	clusters = cluster_by_GNI(clusters, '2013')
+	clusters = cluster_by_GNI(clusters, yr)
 	print("OUT")
 	print(clusters)
 	country_to_cluster = {}
@@ -115,6 +118,8 @@ def country_graph(clusters, yr):
 		count = count + 1
 		locations_dict[count] = k
 		clusters_dict[count] = country_to_cluster[k]
+
+	write_to_file(locations_dict, clusters_dict, yr, writer)
 
 	scl = [[0.0, '#8CB369'],[0.2, '#B1DD83'],[0.4, '#F4E285'],\
             [0.6, '#F2CA7E'],[0.8, '#F78E69'],[1.0, 'rgb(214, 228, 225)']]
@@ -153,11 +158,14 @@ def compute_cluster(clusters, df):
 	K = clusters
 
 	aXmeans_byCluster = []
+
+	"""Randomly select Countries"""
 	countries = random_selection(df, clusters)
 
 	for c in countries:
 		row = country_row(c, df)
 		aXmeans_byCluster.append(row)
+	
 	
 	"""Set initial clusters (random)
 
@@ -172,22 +180,20 @@ def compute_cluster(clusters, df):
 		aXmeans_byCluster.append(cluster)
 	"""
 
-	"""Set initial clusters (points)	
+	"""Set initial clusters (points)
 
-	usa = country_row("USA", df)
-	gbr = country_row("GBR", df)
-	ago = country_row("AGO", df)
-	kgz = country_row("KGZ", df)
-	bra = country_row("BRA", df)
+	one = country_row("USA", df)
+	two = country_row("NGA", df)
+	three = country_row("IND", df)
+	four = country_row("DEU", df)
+	five = country_row("COL", df)
 
-
-	aXmeans_byCluster.append(usa)
-	aXmeans_byCluster.append(gbr)
-	aXmeans_byCluster.append(ago)
-	aXmeans_byCluster.append(kgz)
-	aXmeans_byCluster.append(bra)
-	"""
-
+	aXmeans_byCluster.append(one)
+	aXmeans_byCluster.append(two)
+	aXmeans_byCluster.append(three)
+	aXmeans_byCluster.append(four)
+	aXmeans_byCluster.append(five)
+	"""	
 
 
 
@@ -306,7 +312,7 @@ def random_selection(df, numClusters):
 		ans.append(c[0])
 	return ans
 
-def get_clusters(numClusters, csvFile, iterations, mode, year):
+def get_clusters(numClusters, csvFile, iterations, mode, year, writer):
 	df = pd.read_csv(csvFile)
 	global ATTRIBUTES
 	ATTRIBUTES = len(df.columns) - 1
@@ -314,12 +320,16 @@ def get_clusters(numClusters, csvFile, iterations, mode, year):
 		graph(df, iterations)
 	if mode == 'cluster':
 		cluster = threading(df, numClusters, iterations)[0]
-		country_graph(cluster, year)
+		country_graph(cluster, year, writer)
 
 def run():
-	for i in range(1960,2015):
-		path = '../data/mice' + str(i)
-		get_clusters(3, path, 1000, 'cluster', str(i))
+	csvfile = open('test.csv', 'w')
+	writer = csv.writer(csvfile)
+	writer.writerow( ('Year', 'Country', 'Cluster') )
 
-#run()
-get_clusters(3, FILE, 100, 'cluster', '2013')
+	for i in range(1964,2013):
+		path = '../data/dr_mat_' + str(i) + "_mice.csv"
+		get_clusters(3, path, 1000, 'cluster', str(i), writer)
+
+run()
+#get_clusters(3, FILE, 100, 'cluster', '2013')
