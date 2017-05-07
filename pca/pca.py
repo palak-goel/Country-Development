@@ -290,6 +290,31 @@ def convert_mat_to_db(filename_r, filename_w):
     f_r.close()
     f_w.close()
 
+def write_subset_attrs(attr_codes, start=1964, end=2013):
+    id_str = "_".join(attr_codes)
+    csv_format = ",".join(attr_codes)
+    for year in range(start,end+1):
+        try:
+            f = open(os.path.abspath("../data/mice_"+str(year) +".csv"), 'r')
+            f_w = open(os.path.abspath("../data/subset/"+id_str+"_"+str(year) +".csv"), 'w+')
+            idx_mapping = {}
+            header = f.readline()
+            for p, indicator in enumerate(header.split(",")):
+                if p != 0:
+                    idx_mapping[indicator.lstrip()] = p
+            f_w.write("Country," + csv_format+'\n')
+            for l in f: 
+                l_tokenized = l.split(",")
+                f_w.write(l_tokenized[0])
+                for attr_code in attr_codes:
+                    f_w.write("," + l_tokenized[idx_mapping[attr_code]])
+                f_w.write("\n")
+            f_w.close()
+            f.close()
+        except:
+            print(str(year)+" is bad")
+            continue
+
 #makes files in interval [start, end]
 #does the intermediate conversion to the db format.
 #make sure the file names match the formats.
@@ -302,12 +327,15 @@ def make_pca_files(start, end):
         write_csv_from_mat(double_reduced_mat, ctys_in_order, os.path.abspath("../data/dr_mat_" + str(i) + "_mice.csv"))
         write_csv_from_mat(reduced_mat, ctys_in_order, os.path.abspath("../data/r_mat_" + str(i) + "_mice.csv"))
 
-make_pca_files(1995, 2012)
+# make_pca_files(1995, 2012)
+
 # np_mat, keys_used, u_reduce, imap = reduce_from_csv("recent_compact_2013.csv")
 # write_csv_from_mat(np_mat, keys_used, "pca_2013.csv")
 # write_pca_mat(u_reduce, imap, "pca_mat.csv")
 # convert_mat_to_db("results.csv", "results_db_format.csv")
 # imat, imap, keys_used = generate_data_matrix_for_imputation(create_map("recent_compact_2013.csv"))
 # write_csv_from_mat_with_nulls(imat, imap, keys_used, "2013_mice.csv")
+
+write_subset_attrs(["SP.DYN.LE00.IN"], 1995,2013)
 
 
