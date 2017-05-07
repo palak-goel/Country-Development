@@ -301,7 +301,7 @@ def write_subset_attrs(attr_codes, start=1964, end=2013):
             header = f.readline()
             for p, indicator in enumerate(header.split(",")):
                 if p != 0:
-                    idx_mapping[indicator.lstrip()] = p
+                    idx_mapping[indicator.strip()] = p
             f_w.write("Country," + csv_format+'\n')
             for l in f: 
                 l_tokenized = l.split(",")
@@ -311,8 +311,33 @@ def write_subset_attrs(attr_codes, start=1964, end=2013):
                 f_w.write("\n")
             f_w.close()
             f.close()
+        except Exception as e:
+            print(str(year)+" is bad because of " + e)
+            continue
+
+#this is pretty jank, i don't care
+#aka don't use this for anything
+def write_hdis(start=1964, end=2013):
+    for year in range(start, end+1):
+        try:
+            f = open(os.path.abspath("../data/subset/SP.DYN.LE00.IN_NY.GDP.PCAP.CD_SE.PRM.ENRR_SE.ADT.LITR.ZS_"+str(year)+".csv"), 'r')
+            f_w = open(os.path.abspath("../data/subset/hdi_"+str(year)+".csv"), 'w+')
+            f_w.write("Country,LEI,GDP,EI,HDI\n")
+            f.readline()
+            for l in f: 
+                l_tokenized = l.split(",")
+                lei_raw, gdp_raw, gei_raw, ali_raw = float(l_tokenized[1]), float(l_tokenized[2]), float(l_tokenized[3]), float(l_tokenized[4])
+                lei = (0 if lei_raw <= 0 else (lei_raw - 25) / 65)
+                gdp = (0 if gdp_raw <= 0 else (math.log(gdp_raw - math.log(100)) / (math.log(40000)-math.log(100))))
+                gei = (0 if gei_raw <= 0 else gei_raw/ 100)
+                ali = (0 if ali_raw <= 0 else ali_raw/ 100)
+                ei = 2*ali/3 + gei/3
+                hdi = lei/3+gdp/3+ei/3
+                f_w.write(l_tokenized[0]+","+str(lei)+","+str(gdp)+","+str(ei)+","+str(hdi)+"\n")
+            f.close()
+            f_w.close()
         except:
-            print(str(year)+" is bad")
+            print(str(year) + " is bad")
             continue
 
 #makes files in interval [start, end]
@@ -336,6 +361,7 @@ def make_pca_files(start, end):
 # imat, imap, keys_used = generate_data_matrix_for_imputation(create_map("recent_compact_2013.csv"))
 # write_csv_from_mat_with_nulls(imat, imap, keys_used, "2013_mice.csv")
 
-write_subset_attrs(["SP.DYN.LE00.IN"], 1995,2013)
+# write_subset_attrs(['SP.DYN.LE00.IN', 'NY.GDP.PCAP.CD', 'SE.PRM.ENRR', 'SE.ADT.LITR.ZS'])
+write_hdis(1964,2013)
 
 
