@@ -311,8 +311,8 @@ def write_subset_attrs(attr_codes, start=1964, end=2013):
                 f_w.write("\n")
             f_w.close()
             f.close()
-        except Exception as e:
-            print(str(year)+" is bad because of " + e)
+        except:
+            print(str(year)+" is bad")
             continue
 
 #this is pretty jank, i don't care
@@ -361,7 +361,7 @@ def make_pca_files(start, end):
 # imat, imap, keys_used = generate_data_matrix_for_imputation(create_map("recent_compact_2013.csv"))
 # write_csv_from_mat_with_nulls(imat, imap, keys_used, "2013_mice.csv")
 
-# write_subset_attrs(['SP.DYN.LE00.IN', 'NY.GDP.PCAP.CD', 'SE.PRM.ENRR', 'SE.ADT.LITR.ZS'])
-write_hdis(1964,2013)
+write_subset_attrs(['NY.GNP.PCAP.CD'])
+# write_hdis(1964,2013)
 
 
