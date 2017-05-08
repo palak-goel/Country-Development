@@ -65,13 +65,18 @@ def country_row(country, df):
 	return final
 
 def avg_gni(countryList, yr):
+	if len(countryList) == 0:
+		return 0
 	df = pd.read_csv('../gni_test_file.csv')
 	#print(df)
 	tot = 0
 	totGni = 0
+	print(countryList)
+
 	for c in countryList:
 		gni_data = df.loc[(df['Country'].astype(str) == c) & (df['Year'].astype(str) == yr)]
 		gni = gni_data.values.T.tolist()[2]
+		print(gni)
 		if (len(gni) > 0):
 			print("HERE")
 			tot += 1
@@ -79,10 +84,13 @@ def avg_gni(countryList, yr):
 			print(tot)
 			print(gni[0])
 			print(totGni)
-	print(countryList)
+
 	print(yr)
 	print(totGni)
 	print(tot)
+
+	if (tot == 0):
+		return 0
 	return float(totGni/tot)
 
 
@@ -253,11 +261,13 @@ iterations = how many times to run the cluster
 ans = dictionary to be returned
 """
 def minimize(df, K, iterations, ans):
-	prevMin = 10000000000
+	prevMin = float('inf')
 	for i in range(iterations): 
 		array = compute_cluster(K, df)
 		print(i)
 		if (array[1] < prevMin):
+			print(array[0])
+			print(array[1])
 			ans[0] = array[0]
 			ans[1] = array[1]
 			prevMin = array[1]
@@ -285,9 +295,17 @@ def threading(df, k, iterate):
 	manager = Manager()
 	ans1 = manager.list(range(2))
 	ans2 = manager.list(range(2))
+
+	print(ans1)
+	print(ans2)
+
+
 	print(iterate/2)
 	p1 = Process(target = minimize, args = (df, k,int(iterate/2), ans1))
 	p2 = Process(target = minimize, args = (df, k,int(iterate/2), ans2))
+
+	print(ans1)
+	print(ans2)
 
 	p1.start()
 	p2.start()
@@ -298,13 +316,19 @@ def threading(df, k, iterate):
 	answers.append(ans1)
 	answers.append(ans2)
 
-	prevMin = 10000000000
+	print("ANSWERS")
+	print(answers)
+
+	prevMin = float('inf')
 	clusters = {}
 	for a in answers:
 		if a[1] < prevMin:
 			prevMin = a[1]
 			clusters = a[0]
+			print("A0")
+			print(a)
 	print(prevMin)
+	print(clusters)
 	return (clusters, prevMin)
 
 def random_selection(df, numClusters):
@@ -328,6 +352,8 @@ def get_clusters(numClusters, csvFile, iterations, mode, year, writer):
 		graph(df, iterations)
 	if mode == 'cluster':
 		cluster = threading(df, numClusters, iterations)[0]
+		print("CLUSTER")
+		print(cluster)
 		country_graph(cluster, year, writer)
 
 def run():
@@ -335,8 +361,8 @@ def run():
 	writer = csv.writer(csvfile)
 	writer.writerow( ('Year', 'Country', 'Cluster') )
 
-	for i in range(1988,2013):
-		path = '../data/subset/hdi_' + str(i) + ".csv"
+	for i in range(1964,2014):
+		path = '../data/subset/NY.GNP.PCAP.CD_' + str(i) + ".csv"
 		get_clusters(3, path, 100, 'cluster', str(i), writer)
 
 run()
