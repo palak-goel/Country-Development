@@ -361,8 +361,8 @@ def run():
 	writer = csv.writer(csvfile)
 	writer.writerow( ('Year', 'Country', 'Cluster') )
 
-	for i in range(1964,2014):
-		path = '../data/subset/NY.GNP.PCAP.CD_' + str(i) + ".csv"
+	for i in range(1975,2014):
+		path = '../data/subset/hdi_' + str(i) + ".csv"
 		get_clusters(3, path, 100, 'cluster', str(i), writer)
 
 run()
