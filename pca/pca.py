@@ -455,4 +455,4 @@ def make_pca_files(start=1964, end=2013):
 #                          'NY.GDP.PCAP.PP.KD', 'NY.GNP.PCAP.CD', 'NY.GNP.PCAP.CN', 'NY.GNP.PCAP.KD', 'NY.GNP.PCAP.KN', 
 #                          'NY.GNP.PCAP.PP.CD', 'NY.GNP.PCAP.PP.KD', 'lmao', 'hi'])
 # write_mice_to_compact()
-add_indep_var('NY.GNP.PCAP.CD', 1975, 2013)
+# add_indep_var('NY.GNP.PCAP.CD', 1975, 2013)
