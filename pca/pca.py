@@ -340,19 +340,107 @@ def write_hdis(start=1964, end=2013):
             print(str(year) + " is bad")
             continue
 
+def write_dataset_excluding(exclude=[], start=1964, end=2013):
+    for year in range(start, end+1):
+        try:
+            f_r = open(os.path.abspath("../data/mice_"+str(year)+".csv"), 'r')
+
+            #manually change lmao
+            f_w = open(os.path.abspath("../data/mice_exclude_"+str(year)+".csv"), 'w+')
+
+            ignore_elts, ignore_indices = set(exclude), set([])
+            header_str = "Country"
+            for p, ele in enumerate(f_r.readline().split(",")):
+                ele = ele.strip()
+                if ele in ignore_elts:
+                    ignore_indices.add(p)
+                elif p != 0:
+                    header_str += "," + ele
+            f_w.write(header_str+"\n")
+            for l in f_r:
+                entry_str = ""
+                for p, ele in enumerate(l.split(",")):
+                    ele = ele.strip()
+                    if p == 0:
+                        entry_str += ele
+                    elif p not in ignore_indices:
+                        entry_str += "," + ele
+                f_w.write(entry_str+"\n")
+            f_w.close()
+            f_r.close()
+        except:
+            print(str(year)+" is bad")
+            continue
+
+def write_mice_to_compact(start=1964, end=2013):
+    for year in range(start,end+1):
+        try:
+            f_r = open(os.path.abspath("../data/mice_exclude_"+str(year)+".csv"), 'r')
+
+            #manually change sad reacts only
+            f_w = open(os.path.abspath("../data/compact/compact_exclude_"+str(year)+".csv"), 'w+')
+            header = f_r.readline().split(",")
+            header = list(map(lambda x: x.strip(), header))
+            for l in f_r:
+                l_tokenized=l.split(",")
+                cty = l_tokenized[0]
+                for p, e in enumerate(l.split(",")):
+                    if p != 0:
+                        f_w.write(cty + ", " + header[p] + ", " + e.strip() + "\n")
+            f_w.close()
+            f_r.close()
+        except:
+            print(str(year)+" is bad")
+            continue
+
+def add_indep_var(ind_var, start=1964, end=2013):
+    for year in range(start,end+1):
+        try:
+            f_r_ind_var = open(os.path.abspath("../data/mice_"+str(year)+".csv"), 'r')
+
+            ind_idx = -1
+            for p, e in enumerate(f_r_ind_var.readline().split(",")):
+                if e.strip()==ind_var:
+                    ind_idx = p
+            if ind_idx == -1: 
+                f_r_ind_var.close()
+                continue
+
+            f_r_r = open(os.path.abspath("../data/r_mat_"+str(year)+"_mice_exclude.csv"), 'r')
+            f_r_dr = open(os.path.abspath("../data/dr_mat_"+str(year)+"_mice_exclude.csv"), 'r')
+            f_w_r = open(os.path.abspath("../data/reduced_indep_var/r_mat_gni_"+str(year)+".csv"), 'w+')
+            f_w_dr = open(os.path.abspath("../data/reduced_indep_var/dr_mat_gni_"+str(year)+".csv"), 'w+')
+
+            ind_vals = []
+            for l in f_r_ind_var:
+                l_tokenized=l.split(",")
+                ind_vals.append(l_tokenized[ind_idx])
+            f_w_r.write(f_r_r.readline().strip()+","+ind_var+"\n")
+            for p, l in enumerate(f_r_r):
+                f_w_r.write(l.strip()+","+ind_vals[p]+"\n")
+            f_w_dr.write(f_r_dr.readline().strip()+","+ind_var+"\n")
+            for p, l in enumerate(f_r_dr):
+                f_w_dr.write(l.strip()+","+ind_vals[p]+"\n")
+        except:
+            print(str(year)+" is bad")
+            continue
 #makes files in interval [start, end]
 #does the intermediate conversion to the db format.
 #make sure the file names match the formats.
-def make_pca_files(start, end):
+def make_pca_files(start=1964, end=2013):
     # for i in range(start, end+1):
     #     convert_mat_to_db(os.path.abspath("../data/compact/compact_" + str(i) + ".csv"), os.path.abspath("../data/mice_db_" + str(i) + ".csv"))
     for i in range(start, end+1):
-        data, lcs = get_first_principal_components(os.path.abspath("../data/compact/compact_" + str(i) + ".csv"))
-        reduced_mat, double_reduced_mat, ctys_in_order = generate_lc_mat(data, lcs)
-        write_csv_from_mat(double_reduced_mat, ctys_in_order, os.path.abspath("../data/dr_mat_" + str(i) + "_mice.csv"))
-        write_csv_from_mat(reduced_mat, ctys_in_order, os.path.abspath("../data/r_mat_" + str(i) + "_mice.csv"))
+        try:
+            data, lcs = get_first_principal_components(os.path.abspath("../data/compact/compact_exclude_" + str(i) + ".csv"))
+            reduced_mat, double_reduced_mat, ctys_in_order = generate_lc_mat(data, lcs)
+            write_csv_from_mat(double_reduced_mat, ctys_in_order, os.path.abspath("../data/dr_mat_" + str(i) + "_mice_exclude.csv"))
+            write_csv_from_mat(reduced_mat, ctys_in_order, os.path.abspath("../data/r_mat_" + str(i) + "_mice_exclude.csv"))
+        except:
+            print(str(i) + " is bad")
+            continue
 
-# make_pca_files(1995, 2012)
+# make_pca_files()
 
 # np_mat, keys_used, u_reduce, imap = reduce_from_csv("recent_compact_2013.csv")
 # write_csv_from_mat(np_mat, keys_used, "pca_2013.csv")
@@ -361,7 +449,10 @@ def make_pca_files(start, end):
 # imat, imap, keys_used = generate_data_matrix_for_imputation(create_map("recent_compact_2013.csv"))
 # write_csv_from_mat_with_nulls(imat, imap, keys_used, "2013_mice.csv")
 
-write_subset_attrs(['NY.GNP.PCAP.CD'])
+# write_subset_attrs(['NY.GNP.PCAP.CD'])
 # write_hdis(1964,2013)
-
-
+# write_dataset_excluding(['NY.GDP.PCAP.CD', 'NY.GDP.PCAP.CN', 'NY.GDP.PCAP.KD', 'NY.GDP.PCAP.KN', 'NY.GDP.PCAP.PP.CD', 
+#                          'NY.GDP.PCAP.PP.KD', 'NY.GNP.PCAP.CD', 'NY.GNP.PCAP.CN', 'NY.GNP.PCAP.KD', 'NY.GNP.PCAP.KN', 
+#                          'NY.GNP.PCAP.PP.CD', 'NY.GNP.PCAP.PP.KD', 'lmao', 'hi'])
+# write_mice_to_compact()
+add_indep_var('NY.GNP.PCAP.CD')
