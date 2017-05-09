@@ -406,10 +406,10 @@ def add_indep_var(ind_var, start=1964, end=2013):
                 f_r_ind_var.close()
                 continue
 
-            f_r_r = open(os.path.abspath("../data/r_mat_"+str(year)+"_mice_exclude.csv"), 'r')
-            f_r_dr = open(os.path.abspath("../data/dr_mat_"+str(year)+"_mice_exclude.csv"), 'r')
-            f_w_r = open(os.path.abspath("../data/reduced_indep_var/r_mat_gni_"+str(year)+".csv"), 'w+')
-            f_w_dr = open(os.path.abspath("../data/reduced_indep_var/dr_mat_gni_"+str(year)+".csv"), 'w+')
+            f_r_r = open(os.path.abspath("../data/subset/hdi_"+str(year)+".csv"), 'r')
+            f_r_dr = open(os.path.abspath("../data/subset/hdi_"+str(year)+".csv"), 'r')
+            f_w_r = open(os.path.abspath("../data/reduced_indep_var/hdi_gni_"+str(year)+".csv"), 'w+')
+            f_w_dr = open(os.path.abspath("../data/reduced_indep_var/hdi_gni_"+str(year)+".csv"), 'w+')
 
             ind_vals = []
             for l in f_r_ind_var:
@@ -455,4 +455,4 @@ def make_pca_files(start=1964, end=2013):
 #                          'NY.GDP.PCAP.PP.KD', 'NY.GNP.PCAP.CD', 'NY.GNP.PCAP.CN', 'NY.GNP.PCAP.KD', 'NY.GNP.PCAP.KN', 
 #                          'NY.GNP.PCAP.PP.CD', 'NY.GNP.PCAP.PP.KD', 'lmao', 'hi'])
 # write_mice_to_compact()
-add_indep_var('NY.GNP.PCAP.CD')
+add_indep_var('NY.GNP.PCAP.CD', 1975, 2013)
