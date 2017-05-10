@@ -346,7 +346,7 @@ def write_dataset_excluding(exclude=[], start=1964, end=2013):
             f_r = open(os.path.abspath("../data/mice_"+str(year)+".csv"), 'r')
 
             #manually change lmao
-            f_w = open(os.path.abspath("../data/mice_exclude_"+str(year)+".csv"), 'w+')
+            f_w = open(os.path.abspath("../data/mice_exclude2_"+str(year)+".csv"), 'w+')
 
             ignore_elts, ignore_indices = set(exclude), set([])
             header_str = "Country"
@@ -375,10 +375,10 @@ def write_dataset_excluding(exclude=[], start=1964, end=2013):
 def write_mice_to_compact(start=1964, end=2013):
     for year in range(start,end+1):
         try:
-            f_r = open(os.path.abspath("../data/mice_exclude_"+str(year)+".csv"), 'r')
+            f_r = open(os.path.abspath("../data/mice_exclude2_"+str(year)+".csv"), 'r')
 
             #manually change sad reacts only
-            f_w = open(os.path.abspath("../data/compact/compact_exclude_"+str(year)+".csv"), 'w+')
+            f_w = open(os.path.abspath("../data/compact/compact_exclude2_"+str(year)+".csv"), 'w+')
             header = f_r.readline().split(",")
             header = list(map(lambda x: x.strip(), header))
             for l in f_r:
@@ -408,8 +408,8 @@ def add_indep_var(ind_var, start=1964, end=2013):
 
             f_r_r = open(os.path.abspath("../data/subset/hdi_"+str(year)+".csv"), 'r')
             f_r_dr = open(os.path.abspath("../data/subset/hdi_"+str(year)+".csv"), 'r')
-            f_w_r = open(os.path.abspath("../data/reduced_indep_var/hdi_gni_"+str(year)+".csv"), 'w+')
-            f_w_dr = open(os.path.abspath("../data/reduced_indep_var/hdi_gni_"+str(year)+".csv"), 'w+')
+            f_w_r = open(os.path.abspath("../data/reduced_indep_var/hdi_gender_eq_"+str(year)+".csv"), 'w+')
+            f_w_dr = open(os.path.abspath("../data/reduced_indep_var/hdi_gender_eq_"+str(year)+".csv"), 'w+')
 
             ind_vals = []
             for l in f_r_ind_var:
@@ -432,15 +432,13 @@ def make_pca_files(start=1964, end=2013):
     #     convert_mat_to_db(os.path.abspath("../data/compact/compact_" + str(i) + ".csv"), os.path.abspath("../data/mice_db_" + str(i) + ".csv"))
     for i in range(start, end+1):
         try:
-            data, lcs = get_first_principal_components(os.path.abspath("../data/compact/compact_exclude_" + str(i) + ".csv"))
+            data, lcs = get_first_principal_components(os.path.abspath("../data/compact/compact_exclude2_" + str(i) + ".csv"))
             reduced_mat, double_reduced_mat, ctys_in_order = generate_lc_mat(data, lcs)
-            write_csv_from_mat(double_reduced_mat, ctys_in_order, os.path.abspath("../data/dr_mat_" + str(i) + "_mice_exclude.csv"))
-            write_csv_from_mat(reduced_mat, ctys_in_order, os.path.abspath("../data/r_mat_" + str(i) + "_mice_exclude.csv"))
+            write_csv_from_mat(double_reduced_mat, ctys_in_order, os.path.abspath("../data/dr_mat_" + str(i) + "_mice_exclude2.csv"))
+            write_csv_from_mat(reduced_mat, ctys_in_order, os.path.abspath("../data/r_mat_" + str(i) + "_mice_exclude2.csv"))
         except:
             print(str(i) + " is bad")
             continue
-
-# make_pca_files()
 
 # np_mat, keys_used, u_reduce, imap = reduce_from_csv("recent_compact_2013.csv")
 # write_csv_from_mat(np_mat, keys_used, "pca_2013.csv")
@@ -449,10 +447,9 @@ def make_pca_files(start=1964, end=2013):
 # imat, imap, keys_used = generate_data_matrix_for_imputation(create_map("recent_compact_2013.csv"))
 # write_csv_from_mat_with_nulls(imat, imap, keys_used, "2013_mice.csv")
 
-# write_subset_attrs(['NY.GNP.PCAP.CD'])
+write_subset_attrs(['IQ.CPA.GNDR.XQ'], 2007, 2010)
 # write_hdis(1964,2013)
-# write_dataset_excluding(['NY.GDP.PCAP.CD', 'NY.GDP.PCAP.CN', 'NY.GDP.PCAP.KD', 'NY.GDP.PCAP.KN', 'NY.GDP.PCAP.PP.CD', 
-#                          'NY.GDP.PCAP.PP.KD', 'NY.GNP.PCAP.CD', 'NY.GNP.PCAP.CN', 'NY.GNP.PCAP.KD', 'NY.GNP.PCAP.KN', 
-#                          'NY.GNP.PCAP.PP.CD', 'NY.GNP.PCAP.PP.KD', 'lmao', 'hi'])
-# write_mice_to_compact()
-# add_indep_var('NY.GNP.PCAP.CD', 1975, 2013)
+# write_dataset_excluding(['IQ.CPA.GNDR.XQ', 'lmao', 'hi'], 2007, 2010)
+# write_mice_to_compact(2007, 2010)
+# make_pca_files(2007, 2010)
+# add_indep_var('IQ.CPA.GNDR.XQ', 2007, 2010)
